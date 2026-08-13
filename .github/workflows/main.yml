@@ -1,4 +1,4 @@
-name: Setup SSH Runner + Tailscale
+name: Code Server
 
 on:
   workflow_dispatch:
@@ -37,20 +37,19 @@ jobs:
           curl -fsSL https://tailscale.com/install.sh | sudo sh
           sudo tailscale up --authkey "${TAILSCALE_AUTHKEY}" --hostname "${TAILSCALE_HOSTNAME}"
 
-      - name: Install code-server
+      - name: Install code-server and Show Info
         run: |
-          echo ">>> Installing htop"
-          sudo apt-get update -y && sudo apt-get install -y htop
           echo ">>> Installing Code-server"
           curl -fsSL https://code-server.dev/install.sh | sh
           
-          # Start code-server in the background
-          code-server --bind-addr 0.0.0.0:8080 --auth none > /dev/null 2>&1 &
+          # Start code-server in the background (&) so it doesn't block the script
+          echo ">>> Starting Code-server"
+          code-server --bind-addr 0.0.0.0:8080 --auth none &
           
-          sleep 1
-
-      - name: Show SSH Connection Info
-        run: |
+          # Small sleep to ensure code-server starts before printing info (optional but good practice)
+          sleep 2
+          
+          # Fetch IP and print connection info
           TAILSCALE_IP=$(tailscale ip -4 | head -n1)
           echo "=== SSH CONNECTION INFO ==="
           echo "IP: ${TAILSCALE_IP}"
@@ -59,6 +58,9 @@ jobs:
           echo
           echo ">>> Connect with:"
           echo "    ssh -o StrictHostKeyChecking=no ${USERNAME}@${TAILSCALE_IP}"
+          echo
+          echo ">>> Code-server is accessible at:"
+          echo "    http://${TAILSCALE_IP}:8080"
           echo
           echo ">>> Keeping runner alive..."
           tail -f /dev/null

@@ -1,4 +1,4 @@
-name: Setup SSH Runner + Tailscale + code-server
+name: Setup SSH Runner + Tailscale
 
 on:
   workflow_dispatch:
@@ -43,8 +43,10 @@ jobs:
           sudo apt-get update -y && sudo apt-get install -y htop
           echo ">>> Installing Code-server"
           curl -fsSL https://code-server.dev/install.sh | sh
-          htop code-server --bind-addr 0.0.0.0:8080 --auth none > /dev/null 2>&1 
-          &
+          
+          # Start code-server in the background
+          code-server --bind-addr 0.0.0.0:8080 --auth none > /dev/null 2>&1 &
+          
           sleep 1
 
       - name: Show SSH Connection Info

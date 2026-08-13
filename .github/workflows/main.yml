@@ -1,4 +1,4 @@
-name: Code Server
+name: AXS
 
 on:
   workflow_dispatch:
@@ -37,16 +37,28 @@ jobs:
           curl -fsSL https://tailscale.com/install.sh | sudo sh
           sudo tailscale up --authkey "${TAILSCALE_AUTHKEY}" --hostname "${TAILSCALE_HOSTNAME}"
 
-      - name: Install code-server and Show Info
+      - name: Install AXS and Show Info
         run: |
-          echo ">>> Installing Code-server"
-          curl -fsSL https://code-server.dev/install.sh | sh
+          echo ">>> Installing Node.js and npm"
+          # Update package lists and install prerequisites
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates curl gnupg
           
-          # Start code-server in the background (&) so it doesn't block the script
-          echo ">>> Starting Code-server"
-          code-server --bind-addr 0.0.0.0:8080 --auth none &
+          # Add the official NodeSource repository for Node.js LTS
+          curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
           
-          # Small sleep to ensure code-server starts before printing info (optional but good practice)
+          # Install Node.js (this automatically includes npm)
+          sudo apt-get install -y nodejs
+          
+          echo ">>> Installing AcodeX Server via npm"
+          # Install the Node.js version of acodeX-server globally
+          sudo npm install -g acodex-server
+          
+          # Start the server in the background using nohup so it doesn't block the script
+          echo ">>> Starting axs (AcodeX Server)"
+          nohup axs > axs.log 2>&1 &
+          
+          # Brief pause to let it start up
           sleep 2
           
           # Fetch IP and print connection info
@@ -59,8 +71,9 @@ jobs:
           echo ">>> Connect with:"
           echo "    ssh -o StrictHostKeyChecking=no ${USERNAME}@${TAILSCALE_IP}"
           echo
-          echo ">>> Code-server is accessible at:"
-          echo "    http://${TAILSCALE_IP}:8080"
+          echo ">>> axs is running in the background. Logs are saved in axs.log"
           echo
           echo ">>> Keeping runner alive..."
           tail -f /dev/null
+          
+          

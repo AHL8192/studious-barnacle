@@ -1,4 +1,4 @@
-name: Code Server
+name: AXS
 
 on:
   workflow_dispatch:
@@ -39,14 +39,21 @@ jobs:
 
       - name: Install code-server and Show Info
         run: |
-          echo ">>> Installing Code-server"
-          curl -fsSL https://code-server.dev/install.sh | sh
+          echo ">>> Installing AcodeX Server (axs)"
+          # Standard Linux doesn't use $PREFIX. We define it so the install script doesn't break.
+          # Note: You may need to run this overall script with 'sudo' to write to /usr/local/bin
+          export PREFIX=/usr/local
           
-          # Start code-server in the background (&) so it doesn't block the script
-          echo ">>> Starting Code-server"
-          code-server --bind-addr 0.0.0.0:8080 --auth none &
+          # Run the installation script
+          curl -L https://raw.githubusercontent.com/bajrangCoder/acodex_server/main/install.sh | bash
           
-          # Small sleep to ensure code-server starts before printing info (optional but good practice)
+          # Start axs in the background. 
+          # Using nohup ensures it doesn't crash if the terminal session shifts, 
+          # and redirects its logs to a file (axs.log) so it doesn't mess up your screen.
+          echo ">>> Starting axs"
+          nohup axs > axs.log 2>&1 &
+          
+          # Brief pause to let it start
           sleep 2
           
           # Fetch IP and print connection info
@@ -59,8 +66,8 @@ jobs:
           echo ">>> Connect with:"
           echo "    ssh -o StrictHostKeyChecking=no ${USERNAME}@${TAILSCALE_IP}"
           echo
-          echo ">>> Code-server is accessible at:"
-          echo "    http://${TAILSCALE_IP}:8080"
+          echo ">>> axs is running in the background. Logs are in axs.log"
           echo
           echo ">>> Keeping runner alive..."
           tail -f /dev/null
+
